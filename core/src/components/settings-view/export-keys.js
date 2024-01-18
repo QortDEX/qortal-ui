@@ -24,24 +24,36 @@ class ExportKeys extends connect(store)(LitElement) {
             dgbPMK: { type: String },
             rvnPMK: { type: String },
             arrrPMK: { type: String },
+            nmcPMK: { type: String },
+            dashPMK: { type: String },
+            firoPMK: { type: String },
             btcWALLET: { type: String },
             ltcWALLET: { type: String },
             dogeWALLET: { type: String },
             dgbWALLET: { type: String },
             rvnWALLET: { type: String },
             arrrWALLET: { type: String },
+            nmcWALLET: { type: String },
+            dashWALLET: { type: String },
+            firoWALLET: { type: String },
             btcName: { type: String },
             ltcName: { type: String },
             dogeName: { type: String },
             dgbName: { type: String },
             rvnName: { type: String },
             arrrName: { type: String },
+            nmcName: { type: String },
+            dashName: { type: String },
+            firoName: { type: String },
             btcShort: { type: String },
             ltcShort: { type: String },
             dogeShort: { type: String },
             dgbShort: { type: String },
             rvnShort: { type: String },
             arrrShort: { type: String },
+            nmcShort: { type: String },
+            dashShort: { type: String },
+            firoShort: { type: String },
             enableArrr: { type: Boolean },
             dWalletAddress: { type: String },
             dPrivateKey: { type: String },
@@ -286,6 +298,18 @@ class ExportKeys extends connect(store)(LitElement) {
         this.arrrWALLET = ''
         this.arrrName = 'Pirate Chain'
         this.arrrShort = 'arrr'
+        this.nmcPMK = store.getState().app.selectedAddress.nmcWallet.derivedMasterPrivateKey
+        this.nmcWALLET = store.getState().app.selectedAddress.nmcWallet.address
+        this.nmcName = 'Namecoin'
+        this.nmcShort = 'nmc'
+        this.dashPMK = store.getState().app.selectedAddress.dashWallet.derivedMasterPrivateKey
+        this.dashWALLET = store.getState().app.selectedAddress.dashWallet.address
+        this.dashName = 'Dash'
+        this.dashShort = 'dash'
+        this.firoPMK = store.getState().app.selectedAddress.firoWallet.derivedMasterPrivateKey
+        this.firoWALLET = store.getState().app.selectedAddress.firoWallet.address
+        this.firoName = 'Firo'
+        this.firoShort = 'firo'
         this.enableArrr = false
         this.dWalletAddress = ''
         this.dPrivateKey = ''
@@ -339,58 +363,76 @@ class ExportKeys extends connect(store)(LitElement) {
                             </div>
                             <div @click=${() => this.checkForPmkDownload(this.arrrWALLET, this.arrrPMK, this.arrrName, this.arrrShort)} class="export-button"> ${translate("settings.exp2")} </div>
                         </div>
-                    </div>
-                </div>
+                        <div class="content-box">
+                            <div style="display: flex; align-items: center; justify-content: center;">
+                                <img src="/img/nmc.png" style="width: 32px; height: 32px;">&nbsp;&nbsp;${this.nmcWALLET}<br>
+                            </div>
+                            <div @click=${() => this.checkForPmkDownload(this.nmcWALLET, this.nmcPMK, this.nmcName, this.nmcShort)} class="export-button"> ${translate("settings.exp2")} </div>
+                        </div>
+                        <div class="content-box">
+                            <div style="display: flex; align-items: center; justify-content: center;">
+                                <img src="/img/dash.png" style="width: 32px; height: 32px;">&nbsp;&nbsp;${this.dashWALLET}<br>
+                            </div>
+                            <div @click=${() => this.checkForPmkDownload(this.dashWALLET, this.dashPMK, this.dashName, this.dashShort)} class="export-button"> ${translate("settings.exp2")} </div>
+                        </div>
+                        <div class="content-box">
+                            <div style="display: flex; align-items: center; justify-content: center;">
+                                <img src="/img/firo.png" style="width: 32px; height: 32px;">&nbsp;&nbsp;${this.firoWALLET}<br>
+                            </div>
+                            <div @click=${() => this.checkForPmkDownload(this.firoWALLET, this.firoPMK, this.firoName, this.firoShort)} class="export-button"> ${translate("settings.exp2")} </div>
+                        </div>
+                        </div>
+                            </div>
                 <hr style="margin-top: 20px;">
                 <div class="button-row">
                    <button class="repair-button" title="${translate('nodepage.nchange38')}" @click="${() => this.openRepairLTCDialog()}">${translate("nodepage.nchange38")}</button>
+                    </div>
                 </div>
-            </div>
-            <mwc-dialog id="savePkmDialog" scrimClickAction="" escapeKeyAction="">
-                <img src="/img/${this.dCoinShort}.png" style="width: 32px; height: 32px;">
-                <h3>${this.dCoinName} ${translate("settings.exp2")}</h3>
-                <hr>
-                <h4>${translate("settings.address")}: ${this.dWalletAddress}</h4>
-                <mwc-button
-                    slot="primaryAction"
-                    @click="${() => this.closeSavePkmDialog()}"
-                    class="red"
-                >
-                ${translate("general.close")}
-                </mwc-button>
-                <mwc-button
-                    slot="secondaryAction"
-                    @click="${() => this.exportKey(this.dPrivateKey, this.dCoinName, this.dWalletAddress)}"
-                >
-                ${translate("settings.exp3")}
-                </mwc-button>
-            </mwc-dialog>
-            <mwc-dialog id="arrrWalletNotSynced" scrimClickAction="" escapeKeyAction="">
-                <img src="/img/arrr.png" style="width: 32px; height: 32px;">
-                <h3>${translate("settings.arrr1")}</h3>
-                <hr>
-                <h4>${translate("settings.arrr2")}</h4>
-                <mwc-button
-                    slot="primaryAction"
-                    @click="${() => this.closeArrrWalletNotSynced()}"
-                    class="red"
-                >
-                ${translate("general.close")}
-                </mwc-button>
-            </mwc-dialog>
-            <mwc-dialog id="needCoreUpdate" scrimClickAction="" escapeKeyAction="">
-                <img src="/img/arrr.png" style="width: 32px; height: 32px;">
-                <h3>${translate("settings.arrr3")}</h3>
-                <hr>
-                <h4>${translate("settings.arrr4")}</h4>
-                <mwc-button
-                    slot="primaryAction"
-                    @click="${() => this.closeNeedCoreUpdate()}"
-                    class="red"
-                >
-                ${translate("general.close")}
-                </mwc-button>
-            </mwc-dialog>
+                <mwc-dialog id="savePkmDialog" scrimClickAction="" escapeKeyAction="">
+                    <img src="/img/${this.dCoinShort}.png" style="width: 32px; height: 32px;">
+                    <h3>${this.dCoinName} ${translate("settings.exp2")}</h3>
+                    <hr>
+                    <h4>${translate("settings.address")}: ${this.dWalletAddress}</h4>
+                    <mwc-button
+                        slot="primaryAction"
+                        @click="${() => this.closeSavePkmDialog()}"
+                        class="red"
+                    >
+                    ${translate("general.close")}
+                    </mwc-button>
+                    <mwc-button
+                        slot="secondaryAction"
+                        @click="${() => this.exportKey(this.dPrivateKey, this.dCoinName, this.dWalletAddress)}"
+                    >
+                    ${translate("settings.exp3")}
+                    </mwc-button>
+                </mwc-dialog>
+                <mwc-dialog id="arrrWalletNotSynced" scrimClickAction="" escapeKeyAction="">
+                    <img src="/img/arrr.png" style="width: 32px; height: 32px;">
+                    <h3>${translate("settings.arrr1")}</h3>
+                    <hr>
+                    <h4>${translate("settings.arrr2")}</h4>
+                    <mwc-button
+                        slot="primaryAction"
+                        @click="${() => this.closeArrrWalletNotSynced()}"
+                        class="red"
+                    >
+                    ${translate("general.close")}
+                    </mwc-button>
+                </mwc-dialog>
+                <mwc-dialog id="needCoreUpdate" scrimClickAction="" escapeKeyAction="">
+                    <img src="/img/arrr.png" style="width: 32px; height: 32px;">
+                    <h3>${translate("settings.arrr3")}</h3>
+                    <hr>
+                    <h4>${translate("settings.arrr4")}</h4>
+                    <mwc-button
+                        slot="primaryAction"
+                        @click="${() => this.closeNeedCoreUpdate()}"
+                        class="red"
+                    >
+                    ${translate("general.close")}
+                    </mwc-button>
+                </mwc-dialog>
             <mwc-dialog id="repairLTCDialog" scrimClickAction="" escapeKeyAction="">
                 <img src="/img/ltc.png" style="width: 32px; height: 32px;">
                 <h3>${translate("nodepage.nchange38")}</h3>
@@ -566,7 +608,7 @@ class ExportKeys extends connect(store)(LitElement) {
             const fileHandle = await self.showSaveFilePicker({
                 suggestedName: fileName,
                 types: [{
-                    description: "File",
+                        description: "File",
                 }]
             })
             const writeFile = async (fileHandle, contents) => {

@@ -51,6 +51,9 @@ class WebBrowser extends LitElement {
 			dogeFeePerByte: { type: Number },
 			dgbFeePerByte: { type: Number },
 			rvnFeePerByte: { type: Number },
+			nmcFeePerByte: { type: Number },
+			dashFeePerByte: { type: Number },
+			firoFeePerByte: { type: Number },
 			arrrWalletAddress: { type: String }
 		}
 	}
@@ -228,6 +231,9 @@ class WebBrowser extends LitElement {
 		this.dogeFeePerByte = 0.00001000
 		this.dgbFeePerByte = 0.00000010
 		this.rvnFeePerByte = 0.00001125
+		this.nmcFeePerByte = 0.00000150
+		this.dashFeePerByte = 0.00000010
+		this.firoFeePerByte = 0.00000010
 		this.arrrWalletAddress = ''
 
 		let configLoaded = false
@@ -244,6 +250,9 @@ class WebBrowser extends LitElement {
 				this.dgbWallet = window.parent.reduxStore.getState().app.selectedAddress.dgbWallet
 				this.rvnWallet = window.parent.reduxStore.getState().app.selectedAddress.rvnWallet
 				this.arrrWallet = window.parent.reduxStore.getState().app.selectedAddress.arrrWallet
+				this.nmcWallet = window.parent.reduxStore.getState().app.selectedAddress.nmcWallet
+				this.dashWallet = window.parent.reduxStore.getState().app.selectedAddress.dashWallet
+				this.firoWallet = window.parent.reduxStore.getState().app.selectedAddress.firoWallet
 			})
 			parentEpml.subscribe('config', (c) => {
 				this.config = JSON.parse(c)
@@ -323,39 +332,39 @@ class WebBrowser extends LitElement {
 
 	async linkOpenNewTab(link) {
 
-		const value = link
-		let newQuery = value
-		if (newQuery.endsWith('/')) {
-			newQuery = newQuery.slice(0, -1)
-		}
-		const res = await this.extractComponents(newQuery)
-		if (!res) return
-		const { service, name, identifier, path } = res
-		let query = `?service=${service}`
-		if (name) {
-			query = query + `&name=${name}`
-		}
-		if (identifier) {
-			query = query + `&identifier=${identifier}`
-		}
-		if (path) {
-			query = query + `&path=${path}`
-		}
-
-		window.parent.reduxStore.dispatch(window.parent.reduxAction.setNewTab({
-			url: `qdn/browser/index.html${query}`,
-			id: this.uid.rnd(),
-			myPlugObj: {
-				"url": service === 'WEBSITE' ? "websites" : "qapps",
-				"domain": "core",
-				"page": `qdn/browser/index.html${query}`,
-				"title": name,
-				"icon": service === 'WEBSITE' ? 'vaadin:desktop' : 'vaadin:external-browser',
-				"mwcicon": service === 'WEBSITE' ? 'desktop_mac' : 'open_in_browser',
-				"menus": [],
-				"parent": false
+			const value = link
+			let newQuery = value
+			if (newQuery.endsWith('/')) {
+				newQuery = newQuery.slice(0, -1)
 			}
-		}))
+			const res = await this.extractComponents(newQuery)
+			if (!res) return
+			const { service, name, identifier, path } = res
+			let query = `?service=${service}`
+			if (name) {
+				query = query + `&name=${name}`
+			}
+			if (identifier) {
+				query = query + `&identifier=${identifier}`
+			}
+			if (path) {
+				query = query + `&path=${path}`
+			}
+
+			window.parent.reduxStore.dispatch(window.parent.reduxAction.setNewTab({
+				url: `qdn/browser/index.html${query}`,
+				id: this.uid.rnd(),
+				myPlugObj: {
+					"url": service === 'WEBSITE' ? "websites" : "qapps",
+					"domain": "core",
+					"page": `qdn/browser/index.html${query}`,
+					"title": name,
+					"icon": service === 'WEBSITE' ? 'vaadin:desktop' : 'vaadin:external-browser',
+					"mwcicon": service === 'WEBSITE' ? 'desktop_mac' : 'open_in_browser',
+					"menus": [],
+					"parent": false
+				}
+			}))
 
 	}
 
@@ -767,6 +776,9 @@ class WebBrowser extends LitElement {
 		this.dgbWallet = window.parent.reduxStore.getState().app.selectedAddress.dgbWallet
 		this.rvnWallet = window.parent.reduxStore.getState().app.selectedAddress.rvnWallet
 		this.arrrWallet = window.parent.reduxStore.getState().app.selectedAddress.arrrWallet
+		this.nmcWallet = window.parent.reduxStore.getState().app.selectedAddress.nmcWallet
+		this.dashWallet = window.parent.reduxStore.getState().app.selectedAddress.dashWallet
+		this.firoWallet = window.parent.reduxStore.getState().app.selectedAddress.firoWallet
 
 		window.addEventListener('storage', () => {
 			const checkLanguage = localStorage.getItem('qortalLanguage')
@@ -1425,125 +1437,125 @@ class WebBrowser extends LitElement {
 					this.loader.show()
 					for (const resource of resources) {
 						try {
-							const requiredFields = ['service', 'name']
-							const missingFields = []
+						const requiredFields = ['service', 'name']
+						const missingFields = []
 
-							requiredFields.forEach((field) => {
-								if (!resource[field]) {
-									missingFields.push(field)
+						requiredFields.forEach((field) => {
+							if (!resource[field]) {
+								missingFields.push(field)
+							}
+						})
+
+						if (missingFields.length > 0) {
+							const missingFieldsString = missingFields.join(', ')
+							const errorMsg = `Missing fields: ${missingFieldsString}`
+							failedPublishesIdentifiers.push({
+									reason: errorMsg,
+									identifier: resource.identifier
+								})
+								continue
+						}
+
+						if (!resource.file && !resource.data64) {
+							const errorMsg = 'No data or file was submitted'
+								failedPublishesIdentifiers.push({
+									reason: errorMsg,
+									identifier: resource.identifier
+								})
+								continue
+						}
+
+						const service = resource.service
+						const name = resource.name
+						let identifier = resource.identifier
+						let data64 = resource.data64
+						const filename = resource.filename
+						const title = resource.title
+						const description = resource.description
+						const category = resource.category
+						const tag1 = resource.tag1
+						const tag2 = resource.tag2
+						const tag3 = resource.tag3
+						const tag4 = resource.tag4
+						const tag5 = resource.tag5
+						if (resource.identifier == null) {
+							identifier = 'default'
+						}
+
+						if (!data.encrypt && service.endsWith("_PRIVATE")) {
+							const errorMsg = "Only encrypted data can go into private services"
+								failedPublishesIdentifiers.push({
+									reason: errorMsg,
+									identifier: resource.identifier
+								})
+								continue
+						}
+						if (data.file) {
+							data64 = await fileToBase64(data.file)
+						}
+
+
+						if (data.encrypt) {
+							try {
+
+								const encryptDataResponse = encryptDataGroup({
+									data64, publicKeys: data.publicKeys
+								})
+								if (encryptDataResponse) {
+									data64 = encryptDataResponse
 								}
-							})
 
-							if (missingFields.length > 0) {
-								const missingFieldsString = missingFields.join(', ')
-								const errorMsg = `Missing fields: ${missingFieldsString}`
+							} catch (error) {
+								const errorMsg = error.message || 'Upload failed due to failed encryption'
 								failedPublishesIdentifiers.push({
-									reason: errorMsg,
-									identifier: resource.identifier
-								})
-								continue
-							}
-
-							if (!resource.file && !resource.data64) {
-								const errorMsg = 'No data or file was submitted'
-								failedPublishesIdentifiers.push({
-									reason: errorMsg,
-									identifier: resource.identifier
-								})
-								continue
-							}
-
-							const service = resource.service
-							const name = resource.name
-							let identifier = resource.identifier
-							let data64 = resource.data64
-							const filename = resource.filename
-							const title = resource.title
-							const description = resource.description
-							const category = resource.category
-							const tag1 = resource.tag1
-							const tag2 = resource.tag2
-							const tag3 = resource.tag3
-							const tag4 = resource.tag4
-							const tag5 = resource.tag5
-							if (resource.identifier == null) {
-								identifier = 'default'
-							}
-
-							if (!data.encrypt && service.endsWith("_PRIVATE")) {
-								const errorMsg = "Only encrypted data can go into private services"
-								failedPublishesIdentifiers.push({
-									reason: errorMsg,
-									identifier: resource.identifier
-								})
-								continue
-							}
-							if (data.file) {
-								data64 = await fileToBase64(data.file)
-							}
-
-
-							if (data.encrypt) {
-								try {
-
-									const encryptDataResponse = encryptDataGroup({
-										data64, publicKeys: data.publicKeys
-									})
-									if (encryptDataResponse) {
-										data64 = encryptDataResponse
-									}
-
-								} catch (error) {
-									const errorMsg = error.message || 'Upload failed due to failed encryption'
-									failedPublishesIdentifiers.push({
 										reason: errorMsg,
 										identifier: resource.identifier
 									})
 									continue
-								}
-
-							}
-							if (resource.file && !data.encrypt) {
-								data64 = await fileToBase64(resource.file)
 							}
 
-							const worker = new WebWorker()
-							try {
+						}
+						if (resource.file && !data.encrypt) {
+							data64 = await fileToBase64(resource.file)
+						}
 
-								await publishData({
-									registeredName: encodeURIComponent(name),
-									file: data64,
-									service: service,
-									identifier: encodeURIComponent(identifier),
-									parentEpml,
-									uploadType: 'file',
-									selectedAddress: this.selectedAddress,
-									worker: worker,
-									isBase64: true,
-									filename: filename,
-									title,
-									description,
-									category,
-									tag1,
-									tag2,
-									tag3,
-									tag4,
-									tag5,
-									apiVersion: 2,
-									withFee: res2.userData.isWithFee === true ? true : false,
-									feeAmount: feeAmount
-								})
+						const worker = new WebWorker()
+						try {
 
-								worker.terminate()
-								await new Promise((res) => {
+							await publishData({
+								registeredName: encodeURIComponent(name),
+								file: data64,
+								service: service,
+								identifier: encodeURIComponent(identifier),
+								parentEpml,
+								uploadType: 'file',
+								selectedAddress: this.selectedAddress,
+								worker: worker,
+								isBase64: true,
+								filename: filename,
+								title,
+								description,
+								category,
+								tag1,
+								tag2,
+								tag3,
+								tag4,
+								tag5,
+								apiVersion: 2,
+								withFee: res2.userData.isWithFee === true ? true : false,
+								feeAmount: feeAmount
+							})
+
+							worker.terminate()
+							await new Promise((res) => {
 									setTimeout(() => {
 										res()
 									}, 1000);
 								})
-							} catch (error) {
-								worker.terminate()
-								const errorMsg = error.message || 'Upload failed'
-								failedPublishesIdentifiers.push({
+						} catch (error) {
+							worker.terminate()
+							const errorMsg = error.message || 'Upload failed'
+							failedPublishesIdentifiers.push({
 									reason: errorMsg,
 									identifier: resource.identifier
 								})
@@ -1561,8 +1573,8 @@ class WebBrowser extends LitElement {
 
 
 					}
-					this.loader.hide()
-					if (failedPublishesIdentifiers.length > 0) {
+						this.loader.hide()
+						if (failedPublishesIdentifiers.length > 0) {
 						response = failedPublishesIdentifiers
 						const obj = {}
 						const errorMsg = {
@@ -1715,8 +1727,8 @@ class WebBrowser extends LitElement {
 						)
 						if (res.action === 'accept') {
 							this.addAppToNotificationList(this.name)
-							response = true
-							break
+						response = true
+						break
 						} else {
 							response = false
 							break
@@ -1733,33 +1745,33 @@ class WebBrowser extends LitElement {
 					try {
 						const id = `appNotificationList-${this.selectedAddress.address}`
 						const checkData = localStorage.getItem(id) ? JSON.parse(localStorage.getItem(id)) : null
-						if (!checkData || !checkData[this.name]) throw new Error('App not on permission list')
-						const appInfo = checkData[this.name]
-						const lastNotification = appInfo.lastNotification
-						const interval = appInfo.interval
-						if (lastNotification && interval) {
-							const timeDifference = Date.now() - lastNotification
+			if (!checkData || !checkData[this.name]) throw new Error('App not on permission list')
+					const appInfo = checkData[this.name]
+					const lastNotification = appInfo.lastNotification
+					const interval = appInfo.interval
+					if (lastNotification && interval) {
+						const timeDifference = Date.now() - lastNotification
 
-							if (timeDifference > interval) {
-								parentEpml.request('showNotification', {
-									title, type: "qapp-local-notification", sound: '', url, options: { body: message, icon, badge: icon }
-								})
-								response = true
-								this.updateLastNotification(id, this.name)
-								break
-							} else {
-								throw new Error(`invalid data`)
-							}
-						} else if (!lastNotification) {
+						if (timeDifference > interval) {
 							parentEpml.request('showNotification', {
 								title, type: "qapp-local-notification", sound: '', url, options: { body: message, icon, badge: icon }
-							})
-							response = true
-							this.updateLastNotification(id)
-							break
+						   })
+						   response = true
+						   this.updateLastNotification(id, this.name)
+						   break
 						} else {
 							throw new Error(`invalid data`)
 						}
+					  } else if (!lastNotification) {
+						parentEpml.request('showNotification', {
+							title, type: "qapp-local-notification", sound: '', url, options: { body: message, icon, badge: icon }
+					   })
+					   response = true
+					   this.updateLastNotification(id)
+					   break
+					  } else {
+						throw new Error(`invalid data`)
+					  }
 
 					} catch (error) {
 						const obj = {}
@@ -2315,7 +2327,7 @@ class WebBrowser extends LitElement {
 							window.addEventListener('qortal-request-set-profile-data-response', handleResponseEvent);
 						});
 						if (!res.response) throw new Error('Failed to set property')
-						response = JSON.stringify(res.response);
+							response = JSON.stringify(res.response);
 
 					} catch (error) {
 						const obj = {};
@@ -2349,10 +2361,10 @@ class WebBrowser extends LitElement {
 
 
 					try {
-						const customEvent = new CustomEvent('open-visiting-profile', {
-							detail: data.name
-						});
-						window.parent.dispatchEvent(customEvent);
+						 const customEvent = new CustomEvent('open-visiting-profile', {
+                			detail: data.name
+            		});
+            window.parent.dispatchEvent(customEvent);
 						response = JSON.stringify(true);
 					} catch (error) {
 						const obj = {};
@@ -2384,19 +2396,19 @@ class WebBrowser extends LitElement {
 					}
 					const res3 = await showModalAndWait(
 						actions.GET_USER_WALLET
-					);
+						);
 
-					if (res3.action === 'accept') {
-						let coin = data.coin;
-						let userWallet = {};
-						let arrrAddress = "";
-						if (coin === "ARRR") {
-							arrrAddress = await parentEpml.request('apiCall', {
-								url: `/crosschain/arrr/walletaddress?apiKey=${this.getApiKey()}`,
-								method: 'POST',
-								body: `${window.parent.reduxStore.getState().app.selectedAddress.arrrWallet.seed58}`
+						if (res3.action === 'accept') {
+							let coin = data.coin;
+							let userWallet = {};
+							let arrrAddress = "";
+							if (coin === "ARRR") {
+								 arrrAddress = await parentEpml.request('apiCall', {
+									url: `/crosschain/arrr/walletaddress?apiKey=${this.getApiKey()}`,
+									method: 'POST',
+									body: `${window.parent.reduxStore.getState().app.selectedAddress.arrrWallet.seed58}`
 							})
-						}
+							}
 						switch (coin) {
 							case 'QORT':
 								userWallet['address'] = window.parent.reduxStore.getState().app.selectedAddress.address
@@ -2424,6 +2436,18 @@ class WebBrowser extends LitElement {
 								break
 							case 'ARRR':
 								userWallet['address'] = arrrAddress
+								break
+							case 'NMC':
+								userWallet['address'] = window.parent.reduxStore.getState().app.selectedAddress.nmcWallet.address
+								userWallet['publickey'] = window.parent.reduxStore.getState().app.selectedAddress.nmcWallet.derivedMasterPublicKey
+								break
+							case 'DASH':
+								userWallet['address'] = window.parent.reduxStore.getState().app.selectedAddress.dashWallet.address
+								userWallet['publickey'] = window.parent.reduxStore.getState().app.selectedAddress.dashWallet.derivedMasterPublicKey
+								break
+							case 'FIRO':
+								userWallet['address'] = window.parent.reduxStore.getState().app.selectedAddress.firoWallet.address
+								userWallet['publickey'] = window.parent.reduxStore.getState().app.selectedAddress.firoWallet.derivedMasterPublicKey
 								break
 							default:
 								break
@@ -2454,7 +2478,7 @@ class WebBrowser extends LitElement {
 						response = JSON.stringify(data)
 						break
 					}
-					// Params: data.coin (QORT / BTC / LTC / DOGE / DGB / RVN / ARRR)
+					// Params: data.coin (QORT / BTC / LTC / DOGE / DGB / RVN / ARRR / NMC / DASH / FIRO)
 					// TODO: prompt user to share wallet balance. If they confirm, call `GET /crosschain/:coin/walletbalance`, or for QORT, call `GET /addresses/balance/:address`
 					// then set the response string from the core to the `response` variable (defined above)
 					// If they decline, send back JSON that includes an `error` key, such as `{"error": "User declined request"}`
@@ -2512,6 +2536,18 @@ class WebBrowser extends LitElement {
 								case 'ARRR':
 									_url = `/crosschain/arrr/walletbalance?apiKey=${this.getApiKey()}`
 									_body = window.parent.reduxStore.getState().app.selectedAddress.arrrWallet.seed58
+									break
+								case 'NMC':
+									_url = `/crosschain/nmc/walletbalance?apiKey=${this.getApiKey()}`
+									_body = window.parent.reduxStore.getState().app.selectedAddress.nmcWallet.derivedMasterPublicKey
+									break
+								case 'DASH':
+									_url = `/crosschain/dash/walletbalance?apiKey=${this.getApiKey()}`
+									_body = window.parent.reduxStore.getState().app.selectedAddress.dashWallet.derivedMasterPublicKey
+									break
+								case 'FIRO':
+									_url = `/crosschain/firo/walletbalance?apiKey=${this.getApiKey()}`
+									_body = window.parent.reduxStore.getState().app.selectedAddress.firoWallet.derivedMasterPublicKey
 									break
 								default:
 									break
@@ -3506,6 +3542,330 @@ class WebBrowser extends LitElement {
 						try {
 							const res = await makeRequest()
 							manageResponse(res)
+						} catch (error) {
+							console.error(error)
+							response = '{"error": "Request could not be fulfilled"}'
+						} finally {
+							this.loader.hide()
+						}
+						break
+					} else if (checkCoin === "NMC") {
+						this.loader.show()
+						const amount = Number(data.amount)
+						const recipient = data.destinationAddress
+						const coin = data.coin
+						const xprv58 = this.nmcWallet.derivedMasterPrivateKey
+						const feePerByte = data.fee ? data.fee : this.nmcFeePerByte
+
+						const nmcWalletBalance = await parentEpml.request('apiCall', {
+							url: `/crosschain/nmc/walletbalance?apiKey=${this.getApiKey()}`,
+							method: 'POST',
+							body: `${this.nmcWallet.derivedMasterPublicKey}`
+						})
+
+						if (isNaN(Number(nmcWalletBalance))) {
+							this.loader.hide()
+							let errorMsg = "Failed to Fetch NMC Balance. Try again!"
+							let failedMsg = get("walletpage.wchange33") + " NMC " + get("general.balance")
+							let pleaseMsg = get("walletpage.wchange44")
+							showErrorAndWait("FAILED_FETCH", failedMsg, pleaseMsg)
+							let obj = {}
+							obj['error'] = errorMsg
+							response = JSON.stringify(obj)
+							break
+						}
+
+						const nmcWalletBalanceDecimals = Number(nmcWalletBalance)
+						const nmcAmountDecimals = Number(amount) * QORT_DECIMALS
+						const balance = (Number(nmcWalletBalance) / 1e8).toFixed(8)
+						const fee = feePerByte * 500 // default 0.00075000
+
+						if (nmcAmountDecimals + (fee * QORT_DECIMALS) > nmcWalletBalanceDecimals) {
+							this.loader.hide()
+							let errorMsg = "Insufficient Funds!"
+							let failedMsg = get("walletpage.wchange26")
+							let pleaseMsg = get("walletpage.wchange44")
+							showErrorAndWait("INSUFFICIENT_FUNDS", failedMsg, pleaseMsg)
+							let obj = {}
+							obj['error'] = errorMsg
+							response = JSON.stringify(obj)
+							break
+						}
+
+						this.loader.hide()
+
+						const processPayment = await showModalAndWait(
+							actions.SEND_COIN,
+							{
+								amount,
+								recipient,
+								coin,
+								balance,
+								fee
+							}
+						)
+
+						if (processPayment.action === 'reject') {
+							let errorMsg = "User declined request"
+							let myMsg1 = get("transactions.declined")
+							let myMsg2 = get("walletpage.wchange44")
+							showErrorAndWait("DECLINED_REQUEST", myMsg1, myMsg2)
+							response = '{"error": "User declined request"}'
+							break
+						}
+
+						this.loader.show()
+
+						const makeRequest = async () => {
+							const opts = {
+								xprv58: xprv58,
+								receivingAddress: recipient,
+								nmccoinAmount: amount,
+								feePerByte: feePerByte * QORT_DECIMALS
+							}
+							const response = await parentEpml.request('sendNmc', opts)
+							return response
+						}
+
+						const manageResponse = (response) => {
+							if (response.length === 64) {
+								this.loader.hide()
+								let successMsg = get("walletpage.wchange30")
+								let patientMsg = get("walletpage.wchange43")
+								showErrorAndWait("TRANSACTION_SUCCESS", successMsg, patientMsg)
+							} else if (response === false) {
+								this.loader.hide()
+								let errorMsg = get("walletpage.wchange31")
+								let pleaseMsg = get("walletpage.wchange44")
+								showErrorAndWait("TRANSACTION_FAILED", errorMsg, pleaseMsg)
+							} else {
+								this.loader.hide()
+								let errorMsg = response.message
+								let pleaseMsg = get("walletpage.wchange44")
+								showErrorAndWait("TRANSACTION_FAILED", errorMsg, pleaseMsg)
+								throw new Error(response)
+							}
+						}
+
+						try {
+							const res = await makeRequest()
+							manageResponse(res)
+						} catch (error) {
+							console.error(error)
+							response = '{"error": "Request could not be fulfilled"}'
+						} finally {
+							this.loader.hide()
+						}
+						break
+					} else if (checkCoin === "DASH") {
+						this.loader.show()
+						const amount = Number(data.amount)
+						const recipient = data.destinationAddress
+						const coin = data.coin
+						const xprv58 = this.dashWallet.derivedMasterPrivateKey
+						const feePerByte = data.fee ? data.fee : this.dashFeePerByte
+
+						const dashWalletBalance = await parentEpml.request('apiCall', {
+							url: `/crosschain/dash/walletbalance?apiKey=${this.getApiKey()}`,
+							method: 'POST',
+							body: `${this.dashWallet.derivedMasterPublicKey}`
+						})
+
+						if (isNaN(Number(dashWalletBalance))) {
+							this.loader.hide()
+							let errorMsg = "Failed to Fetch DASH Balance. Try again!"
+							let failedMsg = get("walletpage.wchange33") + " DASH " + get("general.balance")
+							let pleaseMsg = get("walletpage.wchange44")
+							showErrorAndWait("FAILED_FETCH", failedMsg, pleaseMsg)
+							let obj = {}
+							obj['error'] = errorMsg
+							response = JSON.stringify(obj)
+							break
+						}
+
+						const dashWalletBalanceDecimals = Number(dashWalletBalance)
+						const dashAmountDecimals = Number(amount) * QORT_DECIMALS
+						const balance = (Number(dashWalletBalance) / 1e8).toFixed(8)
+						const fee = feePerByte * 500 // default 0.00500000
+
+						if (dashAmountDecimals + (fee * QORT_DECIMALS) > dashWalletBalanceDecimals) {
+							this.loader.hide()
+							let errorMsg = "Insufficient Funds!"
+							let failedMsg = get("walletpage.wchange26")
+							let pleaseMsg = get("walletpage.wchange44")
+							showErrorAndWait("INSUFFICIENT_FUNDS", failedMsg, pleaseMsg)
+							let obj = {}
+							obj['error'] = errorMsg
+							response = JSON.stringify(obj)
+							break
+						}
+
+						this.loader.hide()
+
+						const processPayment = await showModalAndWait(
+							actions.SEND_COIN,
+							{
+								amount,
+								recipient,
+								coin,
+								balance,
+								fee
+							}
+						)
+
+						if (processPayment.action === 'reject') {
+							let errorMsg = "User declined request"
+							let myMsg1 = get("transactions.declined")
+							let myMsg2 = get("walletpage.wchange44")
+							showErrorAndWait("DECLINED_REQUEST", myMsg1, myMsg2)
+							response = '{"error": "User declined request"}'
+							break
+						}
+
+						this.loader.show()
+
+						const makeRequest = async () => {
+							const opts = {
+								xprv58: xprv58,
+								receivingAddress: recipient,
+								dashcoinAmount: amount,
+								feePerByte: feePerByte * QORT_DECIMALS
+							}
+							const response = await parentEpml.request('sendDash', opts)
+							return response
+						}
+
+						const manageResponse = (response) => {
+							if (response.length === 64) {
+								this.loader.hide()
+								let successMsg = get("walletpage.wchange30")
+								let patientMsg = get("walletpage.wchange43")
+								showErrorAndWait("TRANSACTION_SUCCESS", successMsg, patientMsg)
+							} else if (response === false) {
+								this.loader.hide()
+								let errorMsg = get("walletpage.wchange31")
+								let pleaseMsg = get("walletpage.wchange44")
+								showErrorAndWait("TRANSACTION_FAILED", errorMsg, pleaseMsg)
+							} else {
+								this.loader.hide()
+								let errorMsg = response.message
+								let pleaseMsg = get("walletpage.wchange44")
+								showErrorAndWait("TRANSACTION_FAILED", errorMsg, pleaseMsg)
+								throw new Error(response)
+							}
+						}
+
+						try {
+							const res = await makeRequest()
+							manageResponse(res)
+						} catch (error) {
+							console.error(error)
+							response = '{"error": "Request could not be fulfilled"}'
+						} finally {
+							this.loader.hide()
+						}
+						break
+					} else if (checkCoin === "FIRO") {
+						this.loader.show()
+						const amount = Number(data.amount)
+						const recipient = data.destinationAddress
+						const coin = data.coin
+						const xprv58 = this.firoWallet.derivedMasterPrivateKey
+						const feePerByte = data.fee ? data.fee : this.firoFeePerByte
+
+						const firoWalletBalance = await parentEpml.request('apiCall', {
+							url: `/crosschain/firo/walletbalance?apiKey=${this.getApiKey()}`,
+							method: 'POST',
+							body: `${this.firoWallet.derivedMasterPublicKey}`
+						})
+
+						if (isNaN(Number(firoWalletBalance))) {
+							this.loader.hide()
+							let errorMsg = "Failed to Fetch FIRO Balance. Try again!"
+							let failedMsg = get("walletpage.wchange33") + " FIRO " + get("general.balance")
+							let pleaseMsg = get("walletpage.wchange44")
+							showErrorAndWait("FAILED_FETCH", failedMsg, pleaseMsg)
+							let obj = {}
+							obj['error'] = errorMsg
+							response = JSON.stringify(obj)
+							break
+						}
+
+						const firoWalletBalanceDecimals = Number(firoWalletBalance)
+						const firoAmountDecimals = Number(amount) * QORT_DECIMALS
+						const balance = (Number(firoWalletBalance) / 1e8).toFixed(8)
+						const fee = feePerByte * 500 // default 0.00500000
+
+						if (firoAmountDecimals + (fee * QORT_DECIMALS) > firoWalletBalanceDecimals) {
+							this.loader.hide()
+							let errorMsg = "Insufficient Funds!"
+							let failedMsg = get("walletpage.wchange26")
+							let pleaseMsg = get("walletpage.wchange44")
+							showErrorAndWait("INSUFFICIENT_FUNDS", failedMsg, pleaseMsg)
+							let obj = {}
+							obj['error'] = errorMsg
+							response = JSON.stringify(obj)
+							break
+						}
+
+						this.loader.hide()
+
+						const processPayment = await showModalAndWait(
+							actions.SEND_COIN,
+							{
+								amount,
+								recipient,
+								coin,
+								balance,
+								fee
+							}
+						)
+
+						if (processPayment.action === 'reject') {
+							let errorMsg = "User declined request"
+							let myMsg1 = get("transactions.declined")
+							let myMsg2 = get("walletpage.wchange44")
+							showErrorAndWait("DECLINED_REQUEST", myMsg1, myMsg2)
+							response = '{"error": "User declined request"}'
+							break
+						}
+
+						this.loader.show()
+
+						const makeRequest = async () => {
+							const opts = {
+								xprv58: xprv58,
+								receivingAddress: recipient,
+								firocoinAmount: amount,
+								feePerByte: feePerByte * QORT_DECIMALS
+							}
+							const response = await parentEpml.request('sendFiro', opts)
+							return response
+						}
+
+						const manageResponse = (response) => {
+							if (response.length === 64) {
+								this.loader.hide()
+								let successMsg = get("walletpage.wchange30")
+								let patientMsg = get("walletpage.wchange43")
+								showErrorAndWait("TRANSACTION_SUCCESS", successMsg, patientMsg)
+							} else if (response === false) {
+								this.loader.hide()
+								let errorMsg = get("walletpage.wchange31")
+								let pleaseMsg = get("walletpage.wchange44")
+								showErrorAndWait("TRANSACTION_FAILED", errorMsg, pleaseMsg)
+							} else {
+								this.loader.hide()
+								let errorMsg = response.message
+								let pleaseMsg = get("walletpage.wchange44")
+								showErrorAndWait("TRANSACTION_FAILED", errorMsg, pleaseMsg)
+								throw new Error(response)
+							}
+						}
+
+						try {
+							const res = await makeRequest()
+							manageResponse(res)
 							response = res
 							break
 						} catch (error) {
@@ -3517,7 +3877,7 @@ class WebBrowser extends LitElement {
 						break
 					}
 				}
-					break;
+				break;
 				default:
 					console.log('Unhandled message: ' + JSON.stringify(data))
 					return
@@ -3580,6 +3940,18 @@ class WebBrowser extends LitElement {
 				break
 			case 'ARRR':
 				break
+			case 'NMC':
+				userWallet['address'] = window.parent.reduxStore.getState().app.selectedAddress.nmcWallet.address
+				userWallet['publickey'] = window.parent.reduxStore.getState().app.selectedAddress.nmcWallet.derivedMasterPublicKey
+				break
+			case 'DASH':
+				userWallet['address'] = window.parent.reduxStore.getState().app.selectedAddress.dashWallet.address
+				userWallet['publickey'] = window.parent.reduxStore.getState().app.selectedAddress.dashWallet.derivedMasterPublicKey
+				break
+			case 'FIRO':
+				userWallet['address'] = window.parent.reduxStore.getState().app.selectedAddress.firoWallet.address
+				userWallet['publickey'] = window.parent.reduxStore.getState().app.selectedAddress.firoWallet.derivedMasterPublicKey
+				break
 			default:
 				break
 		}
@@ -3621,39 +3993,39 @@ class WebBrowser extends LitElement {
 		const checkData = localStorage.getItem(id) ? JSON.parse(localStorage.getItem(id)) : null
 
 		if (!checkData) {
-			const newData = {
-				[appName]: {
-					interval: 900000, // 15mins in milliseconds
-					lastNotification: null,
-				},
-			}
-			localStorage.setItem(id, JSON.stringify(newData))
+		  const newData = {
+			[appName]: {
+			  interval: 900000, // 15mins in milliseconds
+			  lastNotification: null,
+			},
+		  }
+		  localStorage.setItem(id, JSON.stringify(newData))
 		} else {
-			const copyData = { ...checkData }
-			copyData[appName] = {
-				interval: 900000, // 15mins in milliseconds
-				lastNotification: null,
-			}
-			localStorage.setItem(id, JSON.stringify(copyData))
+		  const copyData = { ...checkData }
+		  copyData[appName] = {
+			interval: 900000, // 15mins in milliseconds
+			lastNotification: null,
+		  }
+		  localStorage.setItem(id, JSON.stringify(copyData))
 		}
-	}
+	  }
 
-	updateLastNotification(id, appName) {
+	  updateLastNotification(id, appName) {
 		const checkData = localStorage.getItem(id) ? JSON.parse(localStorage.getItem(id)) : null
 
 		if (checkData) {
-			const copyData = { ...checkData }
-			if (copyData[appName]) {
-				copyData[appName].lastNotification = Date.now() // Make sure to use Date.now(), not date.now()
-			} else {
-				copyData[appName] = {
-					interval: 900000, // 15mins in milliseconds
-					lastNotification: Date.now(),
-				}
+		  const copyData = { ...checkData }
+		  if (copyData[appName]) {
+			copyData[appName].lastNotification = Date.now() // Make sure to use Date.now(), not date.now()
+		  } else {
+			copyData[appName] = {
+			  interval: 900000, // 15mins in milliseconds
+			  lastNotification: Date.now(),
 			}
-			localStorage.setItem(id, JSON.stringify(copyData))
+		  }
+		  localStorage.setItem(id, JSON.stringify(copyData))
 		}
-	}
+	  }
 
 
 	renderFollowUnfollowButton() {
