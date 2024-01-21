@@ -411,7 +411,7 @@ class TradeBotPortal extends LitElement {
 				<header><span>${this.listedCoins.get(this.selectedCoin).coinCode} ${translate("tradepage.tchange42")}</span></header>
 				<div class="border-wrapper">
 					<div class="loadingContainer" id="loadingHistoricTrades" style="display:${this.isLoadingOpenTrades ? 'block' : 'none'}"><div class="loading"></div><span style="color: var(--black);">${translate("login.loading")}</span></div>
-					<vaadin-grid multi-sort="true" theme="compact column-borders row-stripes wrap-cell-content" id="openOrdersGrid" aria-label="Open Orders" .items="${this.listedCoins.get(this.selectedCoin).openFilteredOrders}">
+					<vaadin-grid multi-sort="true" theme="compact column-borders row-stripes wrap-cell-content" id="openOrdersGrid" aria-label="Open Orders" .items="${this.listedCoins.get(this.selectedCoin) == "NAMECOIN" || "DASH" || "FIRO" ? this.listedCoins.get(this.selectedCoin).openOrders : this.listedCoins.get(this.selectedCoin).openFilteredOrders}">
 						<vaadin-grid-column
 							auto-width
 							resizable
