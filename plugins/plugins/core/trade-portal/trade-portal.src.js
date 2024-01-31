@@ -453,7 +453,7 @@ class TradePortal extends LitElement {
 						wrap-cell-content
 						id="openOrdersGrid"
 						aria-label="Open Orders"
-						.items="${this.listedCoins.get(this.selectedCoin).openFilteredOrders}"
+						.items="${this.listedCoins.get(this.selectedCoin) == "NAMECOIN" || "DASH" || "FIRO" ? this.listedCoins.get(this.selectedCoin).openOrders : this.listedCoins.get(this.selectedCoin).openFilteredOrders}"
 					>
 						<vaadin-grid-column
 							auto-width
